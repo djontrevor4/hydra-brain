@@ -1,0 +1,23 @@
+name: HYDRA Hunt
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        required: true
+        default: example.com
+jobs:
+  hunt:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install requests
+      - run: python hydra.py hunt ${{ github.event.inputs.target }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: results
+          path: |
+            findings.json
+            brain.db

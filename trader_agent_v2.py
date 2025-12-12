@@ -2,11 +2,9 @@
 """Trader Agent v2 - GitHub compatible"""
 import os
 import sys
-import json
 import requests
 from datetime import datetime
 
-# Config from env
 API_KEY = os.getenv("API_KEY", "")
 API_URL = os.getenv("API_URL", "https://openrouter.ai/api/v1/chat/completions")
 MODEL = os.getenv("MODEL", "deepseek/deepseek-chat")
@@ -21,15 +19,14 @@ class AITrader:
         self.api_url = API_URL
     
     def get_signal(self, ticker):
-        """Получает сигнал от LLM"""
         try:
             r = requests.post(self.api_url,
                 headers={"Authorization": f"Bearer {self.api_key}"},
                 json={
                     "model": MODEL,
                     "messages": [
-                        {"role": "system", "content": "Ты трейдинг аналитик MOEX. Отвечай кратко: BUY/SELL/HOLD и уверенность 0-1"},
-                        {"role": "user", "content": f"Анализ {ticker} на сегодня. Формат: SIGNAL confidence"}
+                        {"role": "system", "content": "Ты трейдинг аналитик MOEX. Отвечай: BUY/SELL/HOLD и уверенность 0-1"},
+                        {"role": "user", "content": f"Анализ {ticker}. Формат: SIGNAL confidence"}
                     ],
                     "max_tokens": 50
                 }, timeout=30)
@@ -38,23 +35,20 @@ class AITrader:
             return f"ERROR: {e}"
     
     def scan(self):
-        """Сканирует тикеры"""
         signals = []
-        for t in TICKERS[:5]:  # Лимит для GitHub
+        for t in TICKERS[:5]:
             sig = self.get_signal(t)
             print(f"{t}: {sig}")
             signals.append({"ticker": t, "signal": sig})
         return signals
     
     def alert(self):
-        """Отправляет алерты в TG"""
         signals = self.scan()
-        
-        # Фильтруем BUY
         buys = [s for s in signals if "BUY" in s["signal"].upper()]
         
+        now = datetime.now().strftime("%d.%m %H:%M")
         if buys:
-            msg = f"📈 MOEX Signals {datetime.now().strftime('%d.%m %H:%M')}
+            msg = f"📈 MOEX Signals {now}
 
 "
             for s in buys:
@@ -68,16 +62,14 @@ class AITrader:
             print(f"Sent {len(buys)} alerts")
         else:
             print("No BUY signals")
-            # Отправляем статус
             requests.post(
                 f"https://api.telegram.org/bot{TG_BOT_TOKEN}/sendMessage",
-                json={"chat_id": TG_CHAT_ID, "text": f"🔍 Scan complete: no signals {datetime.now().strftime('%H:%M')}"}
+                json={"chat_id": TG_CHAT_ID, "text": f"🔍 Scan {now}: no signals"}
             )
 
 if __name__ == "__main__":
     trader = AITrader()
     cmd = sys.argv[1] if len(sys.argv) > 1 else "scan"
-    
     if cmd == "scan":
         trader.scan()
     elif cmd == "alert":

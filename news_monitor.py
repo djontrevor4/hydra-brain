@@ -1,11 +1,12 @@
+import os
 import requests
 import sqlite3
 import re
 from datetime import datetime
 import time
 
-BOT_TOKEN = "7819187032:AAFfCgAqyEoq6gSqOjJwr5JbJlLVG-8nQ1c"
-CHAT_ID = "-1002497892646"
+BOT_TOKEN = os.getenv("TG_BOT_TOKEN", "")
+CHAT_ID = os.getenv("TG_CHAT_ID", "")
 
 def send_tg(msg):
     try:

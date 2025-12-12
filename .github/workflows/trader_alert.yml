@@ -1,0 +1,20 @@
+name: Trader Alert via SSH
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 7,15 * * 1-5'
+
+jobs:
+  alert:
+    runs-on: ubuntu-latest
+    steps:
+      - name: SSH to Termux
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: bore.pub
+          port: 22291
+          username: u0_a293
+          key: ${{ secrets.TERMUX_SSH_KEY }}
+          script: |
+            cd ~/findata/hydra2
+            python trader.py

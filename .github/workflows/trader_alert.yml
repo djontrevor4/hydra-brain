@@ -11,8 +11,8 @@ jobs:
       - name: SSH to Termux
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: bore.pub
-          port: 22291
+          host: ${{ secrets.TERMUX_HOST }}
+          port: ${{ secrets.TERMUX_PORT }}
           username: u0_a293
           key: ${{ secrets.TERMUX_SSH_KEY }}
           script: |

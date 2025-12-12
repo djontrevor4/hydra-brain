@@ -1,0 +1,24 @@
+name: Trader Alert
+
+on:
+  schedule:
+    # Каждый день в 10:00 и 18:00 МСК (07:00 и 15:00 UTC)
+    - cron: '0 7,15 * * 1-5'
+  workflow_dispatch:  # Ручной запуск
+
+jobs:
+  alert:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send alert via SSH
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.TERMUX_HOST }}
+          username: ${{ secrets.TERMUX_USER }}
+          key: ${{ secrets.TERMUX_SSH_KEY }}
+          port: 8022
+          script: |
+            cd ~/findata
+            python history_loader.py 2>/dev/null || true
+            python trader_agent_v2.py alert
+            python auto_roadmap.py

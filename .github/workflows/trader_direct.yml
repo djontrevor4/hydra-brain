@@ -1,0 +1,42 @@
+name: Trader Direct
+
+on:
+  schedule:
+    - cron: '0 7,15 * * 1-5'
+  workflow_dispatch:
+
+jobs:
+  trade:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      
+      - name: Install deps
+        run: pip install requests
+      
+      - name: Update prices
+        run: python history_loader.py || true
+        env:
+          TG_BOT_TOKEN: ${{ secrets.TG_BOT_TOKEN }}
+          TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
+      
+      - name: Send alerts
+        run: python trader_agent_v2.py alert
+        env:
+          TG_BOT_TOKEN: ${{ secrets.TG_BOT_TOKEN }}
+          TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
+          API_KEY: ${{ secrets.API_KEY }}
+          API_URL: ${{ secrets.API_URL }}
+      
+      - name: Commit updated DB
+        run: |
+          git config user.name "Trader Bot"
+          git config user.email "bot@trader"
+          git add *.db 2>/dev/null || true
+          git commit -m "Auto: prices update" || true
+          git push || true

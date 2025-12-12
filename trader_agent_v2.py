@@ -29,19 +29,13 @@ class AITrader:
         signals = [(t, self.get_signal(t)) for t in TICKERS]
         buys = [(t,s) for t,s in signals if "BUY" in s.upper()]
         now = datetime.now().strftime("%d.%m %H:%M")
-        
+        msg = "MOEX " + now + " - "
         if buys:
-            msg = "MOEX Signals " + now + "
-"
-            for t,s in buys:
-                msg += t + ": " + s + "
-"
+            msg += ", ".join([t + ":" + s[:20] for t,s in buys])
         else:
-            msg = "Scan " + now + ": no signals"
-        
-        requests.post("https://api.telegram.org/bot" + TG_BOT_TOKEN + "/sendMessage",
-            json={"chat_id": TG_CHAT_ID, "text": msg})
-        print("Sent: " + msg[:50])
+            msg += "no signals"
+        requests.post("https://api.telegram.org/bot" + TG_BOT_TOKEN + "/sendMessage", json={"chat_id": TG_CHAT_ID, "text": msg})
+        print("Sent: " + msg)
 
 if __name__ == "__main__":
     t = AITrader()
